@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-flv=72&h928@4p2uzumrtf$@^t=@=l(mmt_rn(=j15qybbpq+i
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'https://bincom-assessment-test.onrender.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'bincom-assessment-test.onrender.com']
 
 
 # Application definition

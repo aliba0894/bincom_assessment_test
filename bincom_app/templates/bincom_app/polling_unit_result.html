@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Polling Unit Result</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        h1 { color: #333; }
+        table { border-collapse: collapse; width: 50%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .info { margin-bottom: 20px; }
+        .info p { margin: 5px 0; }
+        a { color: #0066cc; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <a href="{% url 'home' %}?state_id={{ lga.state_id|default:'25' }}">&laquo; Back to Polling Units</a>
+    <h1>Polling Unit Result</h1>
+    <div class="info">
+        <p><strong>Polling Unit ID:</strong> {{ polling_unit.uniqueid }}</p>
+        <p><strong>Polling Unit Name:</strong> {{ polling_unit.polling_unit_name|default:"N/A" }}</p>
+        <p><strong>Polling Unit Number:</strong> {{ polling_unit.polling_unit_number|default:"N/A" }}</p>
+        <p><strong>Description:</strong> {{ polling_unit.polling_unit_description|default:"N/A" }}</p>
+        {% if ward %}
+            <p><strong>Ward:</strong> {{ ward.ward_name }}</p>
+        {% endif %}
+        {% if lga %}
+            <p><strong>LGA:</strong> {{ lga.lga_name }}</p>
+        {% endif %}
+    </div>
+
+    <h2>Party Results</h2>
+    {% if results %}
+        <table>
+            <tr>
+                <th>Party</th>
+                <th>Score</th>
+                <th>Entered By</th>
+                <th>Date Entered</th>
+            </tr>
+            {% for result in results %}
+                <tr>
+                    <td>{{ result.party_abbreviation }}</td>
+                    <td>{{ result.party_score }}</td>
+                    <td>{{ result.entered_by_user|default:"N/A" }}</td>
+                    <td>{{ result.date_entered|date:"Y-m-d H:i:s" }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No results found for this polling unit.</p>
+    {% endif %}
+</body>
+</html>

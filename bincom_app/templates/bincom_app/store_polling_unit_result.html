@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Store New Polling Unit Result</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        h1 { color: #333; }
+        select, input[type=text], input[type=number] { padding: 8px; font-size: 14px; width: 300px; }
+        button { padding: 8px 16px; font-size: 14px; cursor: pointer; }
+        table { border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .form-group { margin-bottom: 15px; }
+        label { display: inline-block; width: 200px; font-weight: bold; }
+        nav { margin-bottom: 20px; }
+        nav a { margin-right: 15px; color: #0066cc; }
+        .score-input { width: 100px; }
+    </style>
+    <script>
+        function loadWards() {
+            const lgaId = document.getElementById('id_lga').value;
+            const wardSelect = document.getElementById('id_ward');
+            wardSelect.innerHTML = '<option value="">-- Select Ward --</option>';
+            if (!lgaId) return;
+            fetch('/get-wards/?lga_id=' + lgaId)
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(w => {
+                        const opt = document.createElement('option');
+                        opt.value = w.ward_id;
+                        opt.textContent = w.ward_name;
+                        wardSelect.appendChild(opt);
+                    });
+                });
+        }
+    </script>
+</head>
+<body>
+    <nav>
+        <a href="{% url 'home' %}">Home</a>
+        <a href="{% url 'lga_summed_result' %}">LGA Summed Result</a>
+    </nav>
+    <h1>Store New Polling Unit Result</h1>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="id_lga">Local Government:</label>
+            <select name="lga_id" id="id_lga" onchange="loadWards()" required>
+                <option value="">-- Select LGA --</option>
+                {% for lga in lgas %}
+                    <option value="{{ lga.lga_id }}">{{ lga.lga_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="id_ward">Ward:</label>
+            <select name="ward_id" id="id_ward" required>
+                <option value="">-- Select LGA first --</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="id_pu_name">Polling Unit Name:</label>
+            <input type="text" name="polling_unit_name" id="id_pu_name" required>
+        </div>
+
+        <div class="form-group">
+            <label for="id_pu_number">Polling Unit Number:</label>
+            <input type="text" name="polling_unit_number" id="id_pu_number">
+        </div>
+
+        <h2>Party Scores</h2>
+        <table>
+            <tr>
+                <th>Party</th>
+                <th>Score</th>
+            </tr>
+            {% for party in parties %}
+                <tr>
+                    <td>{{ party.partyname }} ({{ party.partyid }})</td>
+                    <td>
+                        <input type="number" class="score-input" name="score_{{ party.partyid }}" min="0" value="0">
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+
+        <div class="form-group" style="margin-top: 20px;">
+            <button type="submit">Submit Result</button>
+        </div>
+    </form>
+</body>
+</html>

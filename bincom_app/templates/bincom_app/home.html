@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Polling Units</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        h1 { color: #333; }
+        nav { margin-bottom: 20px; }
+        nav a { margin-right: 15px; color: #0066cc; }
+        select, button { padding: 8px; font-size: 14px; }
+        select { width: 250px; }
+        button { cursor: pointer; }
+        .filters { margin: 15px 0; display: flex; gap: 10px; align-items: end; flex-wrap: wrap; }
+        .filter-group { display: flex; flex-direction: column; }
+        .filter-group label { font-weight: bold; margin-bottom: 3px; font-size: 13px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        a { color: #0066cc; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+    <script>
+        function loadLgas() {
+            const stateId = document.getElementById('id_state').value;
+            const lgaSelect = document.getElementById('id_lga');
+            const wardSelect = document.getElementById('id_ward');
+            lgaSelect.innerHTML = '<option value="">-- All LGAs --</option>';
+            wardSelect.innerHTML = '<option value="">-- All Wards --</option>';
+            if (!stateId) { document.getElementById('filter-form').submit(); return; }
+            fetch('/get-lgas/?state_id=' + stateId)
+                .then(r => r.json())
+                .then(data => {
+                    data.forEach(l => {
+                        const opt = document.createElement('option');
+                        opt.value = l.lga_id;
+                        opt.textContent = l.lga_name;
+                        lgaSelect.appendChild(opt);
+                    });
+                });
+        }
+        function loadWards() {
+            const lgaId = document.getElementById('id_lga').value;
+            const wardSelect = document.getElementById('id_ward');
+            wardSelect.innerHTML = '<option value="">-- All Wards --</option>';
+            if (!lgaId) { document.getElementById('filter-form').submit(); return; }
+            fetch('/get-wards/?lga_id=' + lgaId)
+                .then(r => r.json())
+                .then(data => {
+                    data.forEach(w => {
+                        const opt = document.createElement('option');
+                        opt.value = w.ward_id;
+                        opt.textContent = w.ward_name;
+                        wardSelect.appendChild(opt);
+                    });
+                });
+        }
+    </script>
+</head>
+<body>
+    <nav>
+        <a href="{% url 'lga_summed_result' %}">LGA Summed Result</a>
+        <a href="{% url 'store_polling_unit_result' %}">Store New Result</a>
+    </nav>
+    <h1>Polling Units</h1>
+
+    <form id="filter-form" method="GET">
+        <div class="filters">
+            <div class="filter-group">
+                <label>State</label>
+                <select name="state_id" id="id_state" onchange="loadLgas()">
+                    <option value="">-- All States --</option>
+                    {% for s in states %}
+                        <option value="{{ s.state_id }}" {% if selected_state == s.state_id|stringformat:"s" %}selected{% endif %}>
+                            {{ s.state_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>LGA</label>
+                <select name="lga_id" id="id_lga" onchange="loadWards()">
+                    <option value="">-- All LGAs --</option>
+                    {% for l in lgas %}
+                        <option value="{{ l.lga_id }}" {% if selected_lga == l.lga_id|stringformat:"s" %}selected{% endif %}>
+                            {{ l.lga_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Ward</label>
+                <select name="ward_id" id="id_ward">
+                    <option value="">-- All Wards --</option>
+                    {% for w in wards %}
+                        <option value="{{ w.ward_id }}" {% if selected_ward == w.ward_id|stringformat:"s" %}selected{% endif %}>
+                            {{ w.ward_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit">Filter</button>
+        </div>
+    </form>
+
+    {% if polling_units %}
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Number</th>
+                <th>Description</th>
+                <th>LGA</th>
+                <th>Ward</th>
+                <th>Action</th>
+            </tr>
+            {% for pu in polling_units %}
+                <tr>
+                    <td>{{ pu.uniqueid }}</td>
+                    <td>{{ pu.polling_unit_name|default:"N/A" }}</td>
+                    <td>{{ pu.polling_unit_number|default:"N/A" }}</td>
+                    <td>{{ pu.polling_unit_description|default:""|truncatewords:10 }}</td>
+                    <td>{{ pu.lga_id }}</td>
+                    <td>{{ pu.ward_id }}</td>
+                    <td><a href="{% url 'polling_unit_result' pu.uniqueid %}">View Results</a></td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        {% if selected_state %}
+            <p>No polling units found for the selected filters.</p>
+        {% else %}
+            <p>Select a state to view polling units.</p>
+        {% endif %}
+    {% endif %}
+</body>
+</html>
